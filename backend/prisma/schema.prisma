@@ -1,0 +1,75 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id String @id @default(uuid())
+  username String
+  firstName String
+  lastName String
+  password String?
+  googleId String? @unique
+  profile Profile?
+  followers User[] @relation("followers")
+  following  User[] @relation("followers")
+  createdPosts Post[] @relation("CreatedPosts")
+  likedPosts Post[] @relation("LikedPosts")
+  comments Comment[]
+  sentRequests Request[] @relation("sent requests")
+  receivedRequesta Request[] @relation("received requests")
+}
+
+model Request {
+  id String @id @default(uuid())
+  sentUser User @relation("sent requests",fields:[sentUserId],references:[id])
+  sentUserId String
+  receivedUser User @relation("received requests",fields:[receivedUserId],references:[id])
+  receivedUserId String
+  requestStatus String @default("pending")
+}
+
+model Profile {
+  id String @id @default(uuid())
+  bio String
+  image String @default("./default-profile-icon.svg")
+  user User @relation(fields:[userId],references:[id])
+  userId String @unique
+}
+
+model Post {
+  id String @id @default(uuid())
+  content String
+  image String?
+  author User @relation("CreatedPosts",fields:[authorId],references:[id])
+  authorId String
+  createdAt DateTime @default(now())
+  visibleTo String @default("all")
+  likedBy User[] @relation("LikedPosts")
+  likes Int @default(0)
+  comments Comment[]
+}
+
+model Comment {
+  id String @id @default(uuid())
+  author User @relation(fields:[authorId],references:[id])
+  authorId String
+  comment String
+  post Post @relation(fields:[postId],references:[id])
+  postId String
+  createdAt DateTime @default(now())
+}
+
+
+
+

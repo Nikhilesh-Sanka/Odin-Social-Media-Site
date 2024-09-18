@@ -1,0 +1,97 @@
+.search-users {
+  button.browse-people {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 25px;
+    width: 120px;
+    background-color: white;
+    border: none;
+    font-weight: 600;
+    margin-left: calc(100% - 130px);
+    img {
+      width: 20px;
+      height: auto;
+    }
+  }
+  .search-bar {
+    width: min(500px, calc(100% - 20px));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 50px auto 30px auto;
+    input {
+      width: calc(100% - 30px);
+      height: 27px;
+    }
+    img {
+      width: 20px;
+      height: auto;
+    }
+  }
+  .results {
+    .user {
+      width: min(600px, calc(100% - 20px));
+      margin: 5px auto;
+      padding: 10px 5px;
+      background-color: whitesmoke;
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      row-gap: 5px;
+      place-items: center;
+      > img {
+        grid-area: 1/1 / span 2 / span 1;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid black;
+      }
+      > p:first-of-type {
+        font-weight: 600;
+      }
+      > p {
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        button {
+          display: inline-flex;
+          margin-left: 8px;
+        }
+      }
+      button {
+        width: 70px;
+        height: 30px;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        border: none;
+        background-color: whitesmoke;
+        img {
+          width: 20px;
+          height: auto;
+        }
+      }
+    }
+  }
+}
+
+/* making the user cards responsive */
+@media (max-width: 450px) {
+  .search-users {
+    .results {
+      .user {
+        > p:first-of-type {
+          grid-area: 1/2 / span 2 / span 1;
+        }
+        > *:last-child {
+          grid-area: 3/1 / span 1 / span 2;
+        }
+      }
+    }
+  }
+}

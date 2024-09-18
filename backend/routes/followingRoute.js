@@ -19,6 +19,7 @@ router.delete("/", async (req, res, next) => {
     const userId = req.userId;
     const followingUserId = req.body["followingUserId"];
     await queries.removeFollowing(userId, followingUserId);
+    res.sendStatus(204);
   } catch (err) {
     next(err);
   }

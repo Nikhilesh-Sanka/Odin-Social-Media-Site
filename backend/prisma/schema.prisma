@@ -27,7 +27,7 @@ model User {
   likedPosts Post[] @relation("LikedPosts")
   comments Comment[]
   sentRequests Request[] @relation("sent requests")
-  receivedRequesta Request[] @relation("received requests")
+  receivedRequests Request[] @relation("received requests")
 }
 
 model Request {
@@ -37,6 +37,7 @@ model Request {
   receivedUser User @relation("received requests",fields:[receivedUserId],references:[id])
   receivedUserId String
   requestStatus String @default("pending")
+  @@unique([sentUserId,receivedUserId])
 }
 
 model Profile {

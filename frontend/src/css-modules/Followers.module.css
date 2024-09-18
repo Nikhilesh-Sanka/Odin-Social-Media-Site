@@ -1,0 +1,54 @@
+.followers {
+  h2 {
+    text-align: center;
+    margin: 30px 0;
+    font-family: font-3;
+    font-size: 2.6rem;
+  }
+  .follower {
+    width: min(600px, calc(100% - 20px));
+    margin: 10px auto;
+    display: grid;
+    background-color: whitesmoke;
+    padding: 10px;
+    grid-template-columns: 80px 1fr;
+    row-gap: 10px;
+    place-items: center;
+    > p:first-of-type {
+      font-weight: 600;
+    }
+    > img {
+      width: 50px;
+      height: 50px;
+      grid-area: 1/1 / span 2 / span 1;
+      border-radius: 50%;
+      border: 1px solid black;
+    }
+    > button.follow-back {
+      grid-area: 3/1 / span 1 / span 2;
+      background-color: whitesmoke;
+      display: flex;
+      border: none;
+      justify-content: center;
+      align-items: center;
+      img {
+        width: 18px;
+        height: auto;
+        margin-right: 5px;
+      }
+    }
+    > button.remove-follower {
+      background-color: whitesmoke;
+      display: flex;
+      border: none;
+      justify-content: center;
+      align-items: center;
+      color: red;
+      img {
+        width: 18px;
+        height: auto;
+        margin-left: 5px;
+      }
+    }
+  }
+}

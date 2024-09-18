@@ -33,39 +33,6 @@ router.get("/all", async (req, res, next) => {
   }
 });
 
-//getting likedPosts
-router.get("/likedPosts", async (req, res, next) => {
-  try {
-    const userId = req.userId;
-    const likedPosts = await queries.getLikedPosts(userId);
-    res.status(200).send(likedPosts);
-  } catch (err) {
-    next(err);
-  }
-});
-
-//getting posts by followers
-router.get("/followersPost", async (req, res, next) => {
-  try {
-    const userId = req.userId;
-    const followersPosts = await queries.getFollowersPosts(userId);
-    res.status(200).send(followersPosts);
-  } catch (err) {
-    next(err);
-  }
-});
-
-//getting posts by following
-router.get("/followingPosts", async (req, res, next) => {
-  try {
-    const userId = req.userId;
-    const followingPosts = await queries.getFollowingPosts(userId);
-    res.status(200).send(followingPosts);
-  } catch (err) {
-    next(err);
-  }
-});
-
 //creating a post
 const supabase = createClient(
   process.env.SUPABASE_PROJECT_URL,
@@ -80,21 +47,26 @@ router.post("/", upload.single("post-img"), async (req, res, next) => {
     const visibilityStatus = req.body["visibilityStatus"]
       ? "all"
       : "followers-following";
-    const fileBase64 = decode(file.buffer.toString("base64"));
-    const { data, error } = await supabase.storage
-      .from("Posts-Pics")
-      .upload(
-        `${req.userId}/${new Date().getTime()}${file.originalname}`,
-        fileBase64
-      );
-    if (error) {
-      throw new Error("file upload error");
-    } else {
-      const { data: image } = supabase.storage
+    if (file) {
+      const fileBase64 = decode(file.buffer.toString("base64"));
+      const { data, error } = await supabase.storage
         .from("Posts-Pics")
-        .getPublicUrl(data.path);
-      const imageUrl = image.publicUrl;
-      await queries.createPost(userId, content, imageUrl, visibilityStatus);
+        .upload(
+          `${req.userId}/${new Date().getTime()}${file.originalname}`,
+          fileBase64
+        );
+      if (error) {
+        next(error);
+      } else {
+        const { data: image } = supabase.storage
+          .from("Posts-Pics")
+          .getPublicUrl(data.path);
+        const imageUrl = image.publicUrl;
+        await queries.createPost(userId, content, imageUrl, visibilityStatus);
+        res.sendStatus(201);
+      }
+    } else {
+      await queries.createPost(userId, content, null, visibilityStatus);
       res.sendStatus(201);
     }
   } catch (err) {
@@ -103,10 +75,10 @@ router.post("/", upload.single("post-img"), async (req, res, next) => {
 });
 
 // liking a post
-router.put("/:postId/like", async (req, res, next) => {
+router.put("/like", async (req, res, next) => {
   try {
     const userId = req.userId;
-    const postId = req.params["postId"];
+    const postId = req.query["postId"];
     await queries.likePost(userId, postId);
     res.sendStatus(201);
   } catch (err) {
@@ -115,10 +87,10 @@ router.put("/:postId/like", async (req, res, next) => {
 });
 
 //disliking a post
-router.put("/:postId/dislike", async (req, res, next) => {
+router.put("/dislike", async (req, res, next) => {
   try {
     const userId = req.userId;
-    const postId = req.params.postId;
+    const postId = req.query.postId;
     await queries.dislikePost(userId, postId);
     res.sendStatus(201);
   } catch (err) {

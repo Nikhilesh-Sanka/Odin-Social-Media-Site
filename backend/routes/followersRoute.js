@@ -19,7 +19,7 @@ router.post("/", async (req, res, next) => {
     const userId = req.userId;
     const requestId = req.body["requestId"];
     await queries.acceptFollowers(userId, requestId);
-    await queries.updateRequestStatus(requestId, "accepted");
+    await queries.updateRequestStatus(requestId, true);
     res.sendStatus(201);
   } catch (err) {
     next(err);

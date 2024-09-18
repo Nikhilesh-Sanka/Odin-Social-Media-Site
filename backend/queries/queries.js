@@ -26,8 +26,8 @@ const getUserByGoogleId = async (googleId) => {
   if (!result) {
     return null;
   } else {
-    const token = jsw.sign({ userId: result.id }, process.env.JSW_TOKEN);
-    return token;
+    const token = jsw.sign({ userId: result.id }, process.env.JWT_SECRET);
+    return `Bearer ${token}`;
   }
 };
 
@@ -46,8 +46,8 @@ const createLocalUser = async (username, password, firstName, lastName) => {
       },
     },
   });
-  const token = jsw.sign({ userId: user.id }, process.env.JSW_SECRET);
-  return token;
+  const token = jsw.sign({ userId: user.id }, process.env.JWT_SECRET);
+  return `Bearer ${token}`;
 };
 
 // create a google user (sign up by google oauth)
@@ -73,7 +73,7 @@ const createGoogleUser = async (
     },
   });
   const token = jsw.sign({ userId: user.id }, process.env.JSW_SECRET);
-  return token;
+  return `Bearer ${token}`;
 };
 
 // profile related queries
@@ -126,14 +126,19 @@ const editProfileImage = async (userId, image) => {
 };
 
 // users related queries
-const getUsers = async (userId) => {
+const getUsers = async (userId, searchQuery) => {
   const result = await prisma.user.findMany({
     where: {
       NOT: {
         id: userId,
       },
+      username: {
+        contains: searchQuery,
+        mode: "insensitive",
+      },
     },
     select: {
+      id: true,
       username: true,
       profile: true,
       followers: {
@@ -151,6 +156,27 @@ const getUsers = async (userId) => {
       },
     },
   });
+  return result;
+};
+
+const getUserProfile = async (userId) => {
+  const result = await prisma.user.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      username: true,
+      firstName: true,
+      lastName: true,
+      profile: {
+        select: {
+          bio: true,
+          image: true,
+        },
+      },
+    },
+  });
+  return result;
 };
 
 // requests related queries
@@ -158,6 +184,17 @@ const getRequests = async (userId) => {
   const sentRequests = await prisma.request.findMany({
     where: {
       sentUserId: userId,
+    },
+    select: {
+      id: true,
+      receivedUser: {
+        select: {
+          id: true,
+          username: true,
+          profile: true,
+        },
+      },
+      requestStatus: true,
     },
   });
   const receivedRequests = await prisma.request.findMany({
@@ -174,24 +211,45 @@ const getRequests = async (userId) => {
         ],
       },
     },
+    select: {
+      id: true,
+      sentUser: {
+        select: {
+          id: true,
+          username: true,
+          profile: true,
+        },
+      },
+    },
   });
-  return { sentRequests, receivedRequests };
+  return { sentRequests, receivedRequests, clientId: userId };
 };
 
 const createRequest = async (userId, friendId) => {
-  await prisma.request.upsert({
-    data: {
-      sentUserId: userId,
-      receivedUserId: friendId,
-    },
-    update: {
-      requestStatus: "pending",
-    },
+  const result = await prisma.request.findMany({
     where: {
       sentUserId: userId,
       receivedUserId: friendId,
     },
   });
+  if (result.length !== 0) {
+    await prisma.request.updateMany({
+      where: {
+        sentUserId: userId,
+        receivedUserId: friendId,
+      },
+      data: {
+        requestStatus: "pending",
+      },
+    });
+  } else {
+    await prisma.request.create({
+      data: {
+        sentUserId: userId,
+        receivedUserId: friendId,
+      },
+    });
+  }
 };
 
 const updateRequestStatus = async (requestId, newRequestStatus) => {
@@ -233,9 +291,10 @@ const getFollowers = async (userId) => {
     select: {
       followers: {
         select: {
+          id: true,
           username: true,
           profile: true,
-          following: {
+          followers: {
             where: {
               id: userId,
             },
@@ -290,10 +349,19 @@ const removeFollower = async (userId, followerId) => {
       },
     },
   });
+  await prisma.request.updateMany({
+    where: {
+      sentUserId: followerId,
+      receivedUserId: userId,
+    },
+    data: {
+      requestStatus: "rejected",
+    },
+  });
 };
 
 const followFollower = async (userId, followerId) => {
-  await prisma.user.update({
+  const result = await prisma.user.update({
     where: {
       id: userId,
       followers: {
@@ -317,6 +385,14 @@ const followFollower = async (userId, followerId) => {
       },
     },
   });
+  if (result) {
+    await prisma.request.deleteMany({
+      where: {
+        sentUserId: userId,
+        receivedUserId: followerId,
+      },
+    });
+  }
 };
 
 // following related queries
@@ -328,9 +404,8 @@ const getFollowing = async (userId) => {
     select: {
       following: {
         select: {
+          id: true,
           username: true,
-          firstName: true,
-          lastName: true,
           profile: true,
         },
       },
@@ -357,25 +432,50 @@ const removeFollowing = async (userId, followingUserId) => {
       },
     },
   });
+  await prisma.request.deleteMany({
+    where: {
+      sentUserId: userId,
+      receivedUserId: followingUserId,
+    },
+  });
 };
 
 // post related queries
 const getUserPosts = async (userId) => {
-  const result = await prisma.user.findUnique({
+  const result = await prisma.post.findMany({
     where: {
-      id: userId,
+      authorId: userId,
     },
     select: {
-      username: true,
-      posts: {
-        orderBy: {
-          createdAt: "desc",
+      id: true,
+      author: {
+        select: {
+          username: true,
+          profile: {
+            select: {
+              id: true,
+              image: true,
+            },
+          },
         },
       },
-      profile: true,
+      image: true,
+      content: true,
+      likes: true,
+      likedBy: {
+        where: {
+          id: userId,
+        },
+      },
+      createdAt: true,
+      visibleTo: true,
+    },
+    orderBy: {
+      createdAt: "desc",
     },
   });
-  return result;
+
+  return { posts: result, clientId: userId };
 };
 
 const getAllPosts = async (userId) => {
@@ -393,16 +493,20 @@ const getAllPosts = async (userId) => {
             {
               OR: [
                 {
-                  followers: {
-                    some: {
-                      id: userId,
+                  author: {
+                    followers: {
+                      some: {
+                        id: userId,
+                      },
                     },
                   },
                 },
                 {
-                  following: {
-                    some: {
-                      is: userId,
+                  author: {
+                    following: {
+                      some: {
+                        id: userId,
+                      },
                     },
                   },
                 },
@@ -411,15 +515,35 @@ const getAllPosts = async (userId) => {
           ],
         },
         {
-          id: userId,
+          author: {
+            id: userId,
+          },
         },
       ],
     },
     select: {
+      id: true,
       author: {
         select: {
+          id: true,
           username: true,
           profile: true,
+          followers: {
+            where: {
+              id: userId,
+            },
+            select: {
+              id: true,
+            },
+          },
+          following: {
+            where: {
+              id: userId,
+            },
+            select: {
+              id: true,
+            },
+          },
         },
       },
       createdAt: true,
@@ -429,115 +553,37 @@ const getAllPosts = async (userId) => {
           id: userId,
         },
       },
+      image: true,
       likes: true,
+      createdAt: true,
+      visibleTo: true,
     },
     orderBy: {
       createdAt: "desc",
     },
   });
-  return result;
-};
-
-const getLikedPosts = async (userId) => {
-  const result = await prisma.post.findMany({
-    where: {
-      likedBy: {
-        some: {
-          id: userId,
-        },
-      },
-    },
-    select: {
-      author: {
-        select: {
-          username: true,
-          profile: true,
-        },
-      },
-      createdAt: true,
-      content: true,
-      likedBy: {
-        where: {
-          id: userId,
-        },
-      },
-      likes: true,
-    },
-  });
-  return result;
-};
-
-const getFollowersPosts = async (userId) => {
-  const result = await prisma.post.findMany({
-    where: {
-      author: {
-        following: {
-          some: {
-            id: userId,
-          },
-        },
-      },
-    },
-    select: {
-      author: {
-        select: {
-          username: true,
-          profile: true,
-        },
-      },
-      createdAt: true,
-      content: true,
-      likedBy: {
-        where: {
-          id: userId,
-        },
-      },
-      likes: true,
-    },
-  });
-  return result;
-};
-
-const getFollowingPosts = async (userId) => {
-  const result = await prisma.post.findMany({
-    where: {
-      author: {
-        followers: {
-          some: {
-            id: userId,
-          },
-        },
-      },
-    },
-    select: {
-      author: {
-        select: {
-          username: true,
-          profile: true,
-        },
-      },
-      createdAt: true,
-      content: true,
-      likedBy: {
-        where: {
-          id: userId,
-        },
-      },
-      likes: true,
-    },
-  });
-  return result;
+  return { posts: result, clientId: userId };
 };
 
 const createPost = async (userId, content, image, visibilityStatus) => {
-  await prisma.post.create({
-    data: {
-      authorId: userId,
-      content: content,
-      image: image,
-      visibleTo: visibilityStatus,
-    },
-  });
+  if (image) {
+    await prisma.post.create({
+      data: {
+        authorId: userId,
+        content: content,
+        image: image,
+        visibleTo: visibilityStatus,
+      },
+    });
+  } else {
+    await prisma.post.create({
+      data: {
+        authorId: userId,
+        content: content,
+        visibleTo: visibilityStatus,
+      },
+    });
+  }
 };
 
 const likePost = async (userId, postId) => {
@@ -595,8 +641,10 @@ const getComments = async (postId) => {
       postId: postId,
     },
     select: {
+      id: true,
       author: {
         select: {
+          id: true,
           username: true,
           profile: true,
         },
@@ -629,6 +677,7 @@ module.exports = {
   getProfile,
   editProfile,
   getUsers,
+  getUserProfile,
   editProfileImage,
   getRequests,
   createRequest,
@@ -643,9 +692,6 @@ module.exports = {
   removeFollowing,
   getUserPosts,
   getAllPosts,
-  getLikedPosts,
-  getFollowersPosts,
-  getFollowingPosts,
   createPost,
   likePost,
   dislikePost,

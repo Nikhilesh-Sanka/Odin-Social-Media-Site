@@ -1,0 +1,129 @@
+.inbox {
+  overflow: scroll;
+  padding-bottom: 100px;
+  h2 {
+    text-align: center;
+    font-family: font-3;
+    font-size: 2.6rem;
+  }
+  h3 {
+    text-align: center;
+    font-family: font-1;
+    font-size: 2.2rem;
+  }
+  .received-requests,
+  .sent-requests {
+    margin: 50px 0 0 0;
+  }
+  .category-delete-buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    button {
+      background-color: white;
+      border: none;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: red;
+      font-weight: 600;
+      img {
+        width: 30px;
+        height: auto;
+      }
+    }
+  }
+  .sent-requests {
+    .sent-request {
+      width: min(600px, calc(100% - 20px));
+      margin: 10px auto;
+      background-color: whitesmoke;
+      padding: 10px 20px;
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      row-gap: 10px;
+      place-items: center;
+      > img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        border: 1px solid black;
+        grid-area: 1/1 / span 2 / span 1;
+      }
+      > p:first-of-type {
+        font-weight: 600;
+      }
+      .cancel-request {
+        border: none;
+        display: flex;
+        justify-content: space-evenly;
+        align-items: center;
+        width: 130px;
+        height: 30px;
+        background-color: whitesmoke;
+        img {
+          width: 15px;
+          height: auto;
+        }
+      }
+      .pending-caption {
+        grid-area: 3/1 / span 1 / span 2;
+      }
+      .rejected-caption {
+        grid-area: 3/1 / span 1 / span 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: red;
+        button {
+          border: none;
+          margin-left: 7px;
+          border: none;
+          background-color: whitesmoke;
+        }
+        img {
+          width: 20px;
+          height: auto;
+        }
+      }
+    }
+  }
+  .received-requests {
+    .received-request {
+      width: min(600px, calc(100% - 20px));
+      margin: 10px auto;
+      background-color: whitesmoke;
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      row-gap: 10px;
+      place-items: center;
+      padding: 10px;
+      > img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        grid-area: 1/1 / span 2 / span 1;
+        border: 1px solid black;
+      }
+      > p {
+        font-weight: 600;
+      }
+      > div {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        button {
+          background-color: whitesmoke;
+          border: none;
+          margin: 0 10px;
+          img {
+            width: 18px;
+            height: auto;
+          }
+        }
+      }
+    }
+  }
+}

@@ -16,8 +16,8 @@ router.post("/local", async (req, res, next) => {
       if (user.password !== req.body["password"]) {
         return res.sendStatus(403);
       } else {
-        const token = jsw.sign({ userId: user.id }, process.env.JSW_SECRET);
-        return res.status(200).send({ token });
+        const token = jsw.sign({ userId: user.id }, process.env.JWT_SECRET);
+        return res.status(201).send({ token: `Bearer ${token}` });
       }
     }
   } catch (err) {
@@ -37,8 +37,7 @@ router.post("/google", async (req, res, next) => {
         req.body["firstName"],
         req.body["lastName"],
         req.body["googleId"],
-        req,
-        body["profileImg"]
+        req.body["profileImg"]
       );
       res.status(201).send({ token });
     }

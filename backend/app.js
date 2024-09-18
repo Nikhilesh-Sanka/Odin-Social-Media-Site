@@ -14,6 +14,15 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// testing the database
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+async function main() {
+  const result = await prisma.user.findMany({});
+  console.log(result);
+}
+// main();
+
 // importing the routers
 const signUpRouter = require("./routes/signUpRoute.js");
 const loginRouter = require("./routes/loginRoute.js");
@@ -34,7 +43,7 @@ app.use("/user", (req, res, next) => {
   const headerBearer = req.headers["auth"];
   if (headerBearer) {
     const token = headerBearer.split(" ")[1];
-    jsw.verify(token, process.env.JSW_SECRET, (err, payload) => {
+    jsw.verify(token, process.env.JWT_SECRET, (err, payload) => {
       if (err) {
         return res.sendStatus(403);
       } else {

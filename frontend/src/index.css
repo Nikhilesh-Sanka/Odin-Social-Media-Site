@@ -1,0 +1,108 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  overflow: scroll;
+}
+
+/* styling the header */
+header {
+  display: flex;
+  align-items: center;
+  background-color: #f5d0fe;
+  height: 80px;
+  img {
+    width: 70px;
+    height: auto;
+    border-radius: 50%;
+    margin-left: 30px;
+  }
+  h1 {
+    font-family: font-2;
+    width: calc(100% - 100px);
+    text-align: center;
+  }
+}
+
+/* styling the navbar */
+nav ul {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 60px;
+  position: sticky;
+  top: 100px;
+  list-style-type: none;
+  li {
+    margin: 0 10px;
+  }
+  li.being-viewed {
+    border-bottom: 1px solid black;
+  }
+  a {
+    text-decoration: none;
+    color: black;
+  }
+}
+nav img {
+  display: none;
+  width: 30px;
+  height: auto;
+}
+
+/* styling the main page of the website */
+main.main {
+  width: calc(100% - 250px);
+  position: fixed;
+  top: 140px;
+  right: 0;
+  height: calc(100vh - 80px);
+  overflow: scroll;
+  padding-bottom: 50px;
+}
+
+main.main.full {
+  width: calc(100% - 60px);
+}
+
+/* making the page responsive */
+@media (max-width: 700px) {
+  main.main {
+    width: calc(100% - 60px);
+  }
+}
+
+/* making the navbar responsive */
+@media (max-width: 500px) {
+  nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    ul {
+      display: none;
+      height: 140px;
+      justify-content: space-evenly;
+      align-items: center;
+      flex-direction: column;
+      background-color: white;
+      border: 1px solid black;
+      border-radius: 3px;
+      position: fixed;
+      top: 100px;
+      right: 5px;
+      z-index: 3;
+    }
+    ul.visible {
+      display: flex;
+      li.being-viewed {
+        border: none;
+        a {
+          color: grey;
+        }
+      }
+    }
+    img {
+      display: block;
+    }
+  }
+}

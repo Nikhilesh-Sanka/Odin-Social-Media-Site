@@ -41,7 +41,7 @@ router.put("/", async (req, res, next) => {
 router.delete("/", async (req, res, next) => {
   try {
     const requestId = req.body["requestId"];
-    const userId = req.body["userId"];
+    const userId = req.userId;
     await queries.deleteRequest(requestId, userId);
     res.sendStatus(204);
   } catch (err) {
@@ -55,6 +55,7 @@ router.delete("/:category", async (req, res, next) => {
     const category = req.params["category"];
     const userId = req.userId;
     await queries.deleteRequestOfCategory(category, userId);
+    res.sendStatus(204);
   } catch (err) {
     next(err);
   }
